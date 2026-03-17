@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme {
+  --color-gv: #f59e0b;
+  --color-co: #ef4444;
+  --color-im: #22c55e;
+  --color-gv-bg: #fffbeb;
+  --color-co-bg: #fef2f2;
+  --color-im-bg: #f0fdf4;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  overscroll-behavior: none;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #fafaf9;
+}

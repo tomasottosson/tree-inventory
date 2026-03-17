@@ -1,0 +1,22 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { api } from '../lib/api'
+import type { CreateEventPayload } from '../lib/types'
+
+export function useEvents(params: { positionId?: string; quarterId?: string; type?: string }) {
+  return useQuery({
+    queryKey: ['events', params],
+    queryFn: () => api.getEvents(params),
+    enabled: !!(params.positionId || params.quarterId),
+  })
+}
+
+export function useCreateEvent() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data: CreateEventPayload) => api.createEvent(data),
+    onSuccess: (_result, data) => {
+      qc.invalidateQueries({ queryKey: ['events', { positionId: data.positionId }] })
+      qc.invalidateQueries({ queryKey: ['events', { quarterId: data.quarterId }] })
+    },
+  })
+}

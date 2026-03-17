@@ -1,0 +1,8 @@
+node_modules
+dist
+.env
+*.local
+api/local.settings.json
+api/dist
+.DS_Store
+infra/main.bicepparam
