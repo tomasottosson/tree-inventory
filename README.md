@@ -61,6 +61,16 @@ npm run dev
 
 Välj ditt namn och ange PIN-kod (standard: `1234` för alla användare).
 
+## Deploy (GitHub Actions)
+
+Pushes till `main` triggar automatisk deploy via `.github/workflows/deploy.yml`.
+
+Följande secret måste finnas i repot (Settings → Secrets → Actions):
+
+| Secret | Värde |
+|--------|-------|
+| `AZURE_STATIC_WEB_APPS_API_TOKEN` | Hämtas från Azure Portal → Static Web Apps → Manage deployment token, eller via `az staticwebapp secrets list` |
+
 ## Infrastruktur (IaC)
 
 All Azure-infrastruktur definieras med Bicep i `infra/`. Resurser:
