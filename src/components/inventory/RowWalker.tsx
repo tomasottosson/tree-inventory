@@ -10,7 +10,7 @@ interface Props {
   onDone: () => void
 }
 
-export function RowWalker({ positions, quarterId, quarterName, onDone }: Props) {
+export function RowWalker({ positions, quarterName, onDone }: Props) {
   const rows = useMemo(() => {
     const map = new Map<string, Position[]>()
     for (const p of positions) {
