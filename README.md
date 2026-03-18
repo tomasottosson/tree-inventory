@@ -1,6 +1,6 @@
 # Äppelodlingen — Fältapp
 
-Intern fältapp för inventering och skötsel av en äppelodling (~700 positioner) nära Kivik, Skåne.
+Intern fältapp för inventering och skötsel av en äppelodling (~700 positioner) i Kivik, Skåne.
 
 ## Förutsättningar
 
