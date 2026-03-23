@@ -151,9 +151,9 @@ Alla positioner ska skapas som seed data vid första deploy. Strukturen:
 
 ### Gravensteiner (quarterId: "gravensteiner")
 - 6 huvudrader (G1–G6), 38 positioner per rad
-- 4 pumphus-rader (P1–P4) med 12, 11, 10, 8 positioner
+- 4 pumphus-rader (P1–P4) med 13, 12, 11, 10 positioner
 - ID-format: `gv-{rad}-{position}` (1-indexerat), pumphus: `gv-p{rad}-{position}`
-- Totalt: 228 + 41 = 269 positioner
+- Totalt: 228 + 46 = 274 positioner
 
 ### Cox Orange (quarterId: "cox-orange")
 - 5 rader (C1–C5), 19 positioner per rad
@@ -165,7 +165,7 @@ Alla positioner ska skapas som seed data vid första deploy. Strukturen:
 - ID-format: `im-{rad}-{position}` (1-indexerat)
 - Totalt: 336 positioner
 
-**Totalt: 700 positioner**
+**Totalt: 705 positioner**
 
 ### Landmärken
 
@@ -434,10 +434,10 @@ const QUARTERS = {
       label: `G${i + 1}`, count: 38
     })),
     pumpRows: [
-      { label: "P1", count: 12 },
-      { label: "P2", count: 11 },
-      { label: "P3", count: 10 },
-      { label: "P4", count: 8 },
+      { label: "P1", count: 13 },
+      { label: "P2", count: 12 },
+      { label: "P3", count: 11 },
+      { label: "P4", count: 10 },
     ],
     idPrefix: "gv",
     pumpPrefix: "gv-p",
