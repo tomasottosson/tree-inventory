@@ -63,7 +63,7 @@ app.http('exportWorkSessions', {
       ),
       `Summa,,,${totalHours},`,
     ]
-    const csv = lines.join('\r\n')
+    const csv = '\uFEFF' + lines.join('\r\n')
 
     return {
       status: 200,
