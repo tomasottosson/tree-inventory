@@ -40,12 +40,19 @@ export const api = {
 
   getStats: () => request<import('./types').Stats>('/stats'),
 
-  getEvents: (params: { positionId?: string; quarterId?: string; type?: string }) => {
+  getEvents: (params: { positionId?: string; quarterId?: string; type?: string; from?: string; to?: string }) => {
     const qs = new URLSearchParams()
     if (params.positionId) qs.set('positionId', params.positionId)
     if (params.quarterId) qs.set('quarterId', params.quarterId)
     if (params.type) qs.set('type', params.type)
+    if (params.from) qs.set('from', params.from)
+    if (params.to) qs.set('to', params.to)
     return request<import('./types').Event[]>(`/events?${qs}`)
+  },
+
+  getExportUrl: (from: string, to: string): string => {
+    const base = import.meta.env.VITE_API_BASE_URL || '/api'
+    return `${base}/export/work-sessions?from=${from}&to=${to}&format=csv`
   },
 
   createEvent: (data: import('./types').CreateEventPayload) =>

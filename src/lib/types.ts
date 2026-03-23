@@ -42,7 +42,7 @@ export interface Stats {
   totalInventoried: number
 }
 
-export type EventType = 'fertilization' | 'pruning' | 'observation' | 'harvest' | 'treatment' | 'other'
+export type EventType = 'fertilization' | 'pruning' | 'observation' | 'harvest' | 'treatment' | 'other' | 'work_session'
 
 export interface Event {
   id: string
@@ -50,6 +50,7 @@ export interface Event {
   quarterId: string
   type: EventType
   date: string
+  duration_hours?: number
   details: Record<string, unknown>
   notes: string
   createdBy: string
@@ -61,6 +62,7 @@ export interface CreateEventPayload {
   quarterId: string
   type: EventType
   date: string
+  duration_hours?: number
   details: Record<string, unknown>
   notes: string
   createdBy: string

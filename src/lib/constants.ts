@@ -55,3 +55,19 @@ export const SPECIES_OPTIONS = [
 ] as const
 
 export const USERS = ['tomas', 'mats', 'jonas'] as const
+
+export const WORK_SESSION_ACTIVITIES = [
+  'beskärning',
+  'gräsklippning',
+  'uppsamling',
+  'jordkällare',
+  'gödsling',
+  'övrigt',
+] as const
+
+export const WORK_SESSION_AREAS = [
+  { id: 'all', label: 'Hela odlingen' },
+  { id: 'gravensteiner', label: 'Gravensteiner' },
+  { id: 'cox-orange', label: 'Cox Orange' },
+  { id: 'ingrid-marie', label: 'Ingrid Marie' },
+] as const
