@@ -8,7 +8,7 @@ interface PositionDoc {
   position: number
   type: 'tree' | 'empty' | 'stump' | 'landmark'
   species: string | null
-  condition: 'unknown'
+  condition: 'healthy' | 'weak' | 'dead' | 'unknown'
   notes: string
   inventoriedAt: null
   inventoriedBy: null
@@ -44,16 +44,22 @@ function generatePositions(): PositionDoc[] {
     }
   }
 
-  // Gravensteiner — pump rows
-  const pumpCounts = [12, 11, 10, 8]
+  // Gravensteiner — pump rows (P1: 13, P2: 12, P3: 11, P4: 10)
+  // Position 1 of each row is empty (discovered during field inventory 2026-03-22)
+  // P4 position 10 is a tree/weak (appended after field inventory)
+  const pumpCounts = [13, 12, 11, 10]
   for (let r = 0; r < pumpCounts.length; r++) {
     for (let p = 1; p <= pumpCounts[r]; p++) {
+      const isFirstPos = p === 1
+      const isP4LastPos = r === 3 && p === 10
       positions.push({
         ...base,
         id: `gv-p${r + 1}-${p}`,
         quarterId: 'gravensteiner',
         row: `P${r + 1}`,
         position: p,
+        type: isFirstPos ? 'empty' : isP4LastPos ? 'tree' : base.type,
+        condition: isP4LastPos ? 'weak' : base.condition,
       })
     }
   }
