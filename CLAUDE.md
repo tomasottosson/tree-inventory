@@ -236,17 +236,17 @@ Filen `orchard_map_v3.jsx` innehåller en fungerande spatial kartlayout. Använd
 
 ## Prioriteringsordning
 
-### Fas 1 — Grundinventering (bygg detta först)
-1. Seed data (alla 700 positioner)
-2. Inloggning (PIN)
-3. Inventeringsvy (gå rad för rad, sätt type + condition)
-4. Kartvy (se resultat)
-5. Dashboard (sammanfattning)
+### Fas 1 — Grundinventering (klar)
+1. ~~Seed data (alla 700 positioner)~~
+2. ~~Inloggning (PIN)~~
+3. ~~Inventeringsvy (gå rad för rad, sätt type + condition)~~
+4. ~~Kartvy (se resultat)~~
+5. ~~Dashboard (sammanfattning)~~
 
-### Fas 2 — Åtgärdslogg
-6. Event-systemet (logga gödsling, beskärning etc.)
-7. Positionsdetalj med historik
-8. Filtrera karta efter event-typ
+### Fas 2 — Åtgärdslogg (klar)
+6. ~~Event-systemet (logga gödsling, beskärning etc.)~~
+7. ~~Positionsdetalj med historik~~
+8. ~~Filtrera karta efter event-typ~~
 
 ### Fas 3 — Analys & export
 9. CSV-export av positioner och events
