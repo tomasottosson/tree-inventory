@@ -43,6 +43,20 @@ export function DashboardPage() {
           <span className="text-2xl block mb-1">🗺</span>
           <span className="font-medium">Karta</span>
         </button>
+        <button
+          onClick={() => navigate('/work-session')}
+          className="py-5 px-4 bg-white border border-stone-200 rounded-2xl text-left text-stone-800"
+        >
+          <span className="text-2xl block mb-1">⏱</span>
+          <span className="font-medium">Logga arbetspass</span>
+        </button>
+        <button
+          onClick={() => navigate('/export')}
+          className="py-5 px-4 bg-white border border-stone-200 rounded-2xl text-left text-stone-800"
+        >
+          <span className="text-2xl block mb-1">📤</span>
+          <span className="font-medium">Exportera redovisning</span>
+        </button>
       </div>
 
       {/* Stats */}

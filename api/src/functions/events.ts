@@ -8,6 +8,8 @@ app.http('getEvents', {
     const positionId = req.query.get('positionId')
     const quarterId = req.query.get('quarterId')
     const type = req.query.get('type')
+    const from = req.query.get('from')
+    const to = req.query.get('to')
     const container = getContainer('events')
 
     let query: string
@@ -25,6 +27,11 @@ app.http('getEvents', {
         query = 'SELECT * FROM c WHERE c.quarterId = @quarterId ORDER BY c.date DESC'
         parameters.push({ name: '@quarterId', value: quarterId })
       }
+    } else if (type && from && to) {
+      query = 'SELECT * FROM c WHERE c.type = @type AND c.date >= @from AND c.date <= @to ORDER BY c.date ASC'
+      parameters.push({ name: '@type', value: type })
+      parameters.push({ name: '@from', value: from })
+      parameters.push({ name: '@to', value: to })
     } else {
       query = 'SELECT * FROM c ORDER BY c.date DESC'
     }
@@ -48,7 +55,7 @@ app.http('createEvent', {
     }
 
     const container = getContainer('events')
-    const event = {
+    const event: Record<string, unknown> = {
       id: `evt-${crypto.randomUUID()}`,
       positionId: body.positionId,
       quarterId: body.quarterId,
@@ -58,6 +65,10 @@ app.http('createEvent', {
       notes: body.notes || '',
       createdBy: body.createdBy || 'unknown',
       createdAt: new Date().toISOString(),
+    }
+
+    if (body.duration_hours !== undefined && body.duration_hours !== null) {
+      event.duration_hours = body.duration_hours
     }
 
     const { resource } = await container.items.create(event)

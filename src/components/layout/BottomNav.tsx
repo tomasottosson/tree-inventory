@@ -4,6 +4,7 @@ const tabs = [
   { to: '/dashboard', label: 'Översikt', icon: '📊' },
   { to: '/map', label: 'Karta', icon: '🗺' },
   { to: '/inventory', label: 'Inventera', icon: '📋' },
+  { to: '/work-session', label: 'Logga', icon: '⏱' },
 ]
 
 export function BottomNav() {

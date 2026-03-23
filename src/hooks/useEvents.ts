@@ -10,6 +10,14 @@ export function useEvents(params: { positionId?: string; quarterId?: string; typ
   })
 }
 
+export function useWorkSessions(from: string, to: string) {
+  return useQuery({
+    queryKey: ['events', { type: 'work_session', from, to }],
+    queryFn: () => api.getEvents({ type: 'work_session', from, to }),
+    enabled: !!(from && to),
+  })
+}
+
 export function useCreateEvent() {
   const qc = useQueryClient()
   return useMutation({
