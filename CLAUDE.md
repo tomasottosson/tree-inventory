@@ -56,15 +56,16 @@ Alla positioner i odlingen — varje punkt i rutnätet, oavsett om det står ett
 
 ### `events` (container, partitionKey: `/positionId`)
 
-Alla händelser/åtgärder kopplade till en position. Append-only logg.
+Alla händelser/åtgärder kopplade till en position eller ett arbetspass. Append-only logg.
 
 ```json
 {
   "id": "evt-uuid",
   "positionId": "gv-1-1",
   "quarterId": "gravensteiner",
-  "type": "fertilization | pruning | observation | harvest | treatment | other",
+  "type": "fertilization | pruning | observation | harvest | treatment | other | work_session",
   "date": "2026-03-17",
+  "duration_hours": null,
   "details": {
     "fertilizer": "YaraMila Promagna 11-5-18",
     "amount_kg": 0.75,
@@ -76,7 +77,11 @@ Alla händelser/åtgärder kopplade till en position. Append-only logg.
 }
 ```
 
-`details`-objektet är flexibelt per event-typ:
+#### `duration_hours` (nytt fält)
+
+Toppnivå-fält på event-objektet. Obligatoriskt för `work_session`, valfritt/ignorerat för övriga event-typer. Anges i decimaltal (t.ex. `1.5` = 1 timme 30 minuter).
+
+#### `details`-objektet per event-typ:
 
 | type | details-fält |
 |------|-------------|
@@ -85,6 +90,42 @@ Alla händelser/åtgärder kopplade till en position. Append-only logg.
 | observation | leaf_color, shoot_growth_cm, flowering (none/sparse/normal/rich), disease |
 | harvest | amount_kg, quality (A/B/C/foder/must), usage |
 | treatment | treatment_type, product, reason |
+| work_session | activity, description |
+
+#### Event-typ: `work_session`
+
+Arbetspass loggas per person och dag. Om Tomas och Mats jobbar ihop i 5 timmar loggar var och en sitt eget pass (= 10 timmar totalt den dagen i exporten).
+
+`positionId` sätts till kvarters-ID (`gravensteiner`, `cox-orange`, `ingrid-marie`) eller `"all"` om arbetet gäller hela odlingen. `quarterId` sätts till samma värde.
+
+```json
+{
+  "id": "evt-uuid",
+  "positionId": "gravensteiner",
+  "quarterId": "gravensteiner",
+  "type": "work_session",
+  "date": "2026-04-15",
+  "duration_hours": 4.5,
+  "details": {
+    "activity": "beskärning",
+    "description": "Beskärning rad G1–G3, uppsamling av grenar"
+  },
+  "notes": "",
+  "createdBy": "tomas",
+  "createdAt": "2026-04-15T16:30:00Z"
+}
+```
+
+##### `details.activity` — tillåtna värden
+
+| Värde | Beskrivning |
+|-------|-------------|
+| `beskärning` | Beskärning av fruktträd |
+| `gräsklippning` | Slåtter / gräsklippning |
+| `uppsamling` | Uppsamling av grenar, gräs, fallfrukt |
+| `jordkällare` | Restaureringsarbete på jordkällaren |
+| `gödsling` | Gödsling (kompletterar positionsvisa fertilization-events) |
+| `övrigt` | Annat arbete |
 
 ### `users` (container, partitionKey: `/id`)
 
@@ -149,7 +190,7 @@ Exakta positioner att markera bestäms vid första fältinventering.
 - Sammanfattning: antal inventerade / ej inventerade positioner per kvarter
 - Stapel eller cirkel per kvarter: fördelning träd/tomt/stubbe
 - Senaste händelser (10 senaste events)
-- Snabbknappar: "Inventera", "Logga åtgärd"
+- Snabbknappar: "Inventera", "Logga åtgärd", "Logga arbetspass"
 
 ### 3. Kartvyn (`/map`)
 - Spatial layout av alla positioner, liknande den React-artefakt vi byggt (se referensimplementation nedan)
@@ -184,6 +225,25 @@ Exakta positioner att markera bestäms vid första fältinventering.
 - Sorterbara kolumner: rad, position, type, condition, senaste event
 - Filtrerbar
 
+### 8. Logga arbetspass (`/work-session`)
+- **Används efter avslutat arbetspass för att logga tid till Länsstyrelsens redovisning.**
+- Nåbar via snabbknapp på Dashboard eller som egen tab
+- Formulär (5 fält, optimerat för snabb inmatning):
+  1. **Datum** — datumväljare, default idag
+  2. **Område** — dropdown: Hela odlingen / Gravensteiner / Cox Orange / Ingrid Marie
+  3. **Aktivitet** — dropdown: beskärning / gräsklippning / uppsamling / jordkällare / gödsling / övrigt
+  4. **Timmar** — nummerfält med steg om 0.5 (stepper-knappar −/+)
+  5. **Beskrivning** — fritext (valfritt), t.ex. "Rad G1–G3, klart"
+- Spara → bekräftelse → tillbaka till dashboard
+- Data sparas som `work_session`-event via befintligt `POST /api/events`
+
+### 9. Exportera redovisning (`/export`)
+- **Genererar den redovisning Länsstyrelsen kräver för kulturmiljöbidraget.**
+- Datumintervall (from/to), default 2026-01-01 till idag
+- Förhandsvisning: tabell med alla work_sessions i intervallet
+- Summa timmar längst ner
+- Knapp "Ladda ner Excel" → triggar export-endpoint
+
 ---
 
 ## Mobile-first design
@@ -209,12 +269,34 @@ GET    /api/positions/:id
 PATCH  /api/positions/:id
 GET    /api/events?positionId=gv-1-1
 GET    /api/events?quarterId=gravensteiner&type=fertilization
+GET    /api/events?type=work_session&from=2026-01-01&to=2026-10-15
 POST   /api/events
+GET    /api/export/work-sessions?from=2026-01-01&to=2026-10-15&format=xlsx
 GET    /api/stats
 GET    /api/users
 POST   /api/auth/login   { userId, pin }
 POST   /api/seed          (skapar alla positioner, körs en gång)
 ```
+
+### Export-endpoint: `/api/export/work-sessions`
+
+Hämtar alla `work_session`-events i datumintervallet och genererar en Excel-fil (xlsx) eller JSON.
+
+**Query-parametrar:**
+- `from` (ISO-datum, obligatoriskt)
+- `to` (ISO-datum, obligatoriskt)
+- `format` (`xlsx` eller `json`, default `xlsx`)
+
+**Excel-output:** En flik med kolumner:
+
+| Datum | Aktivitet | Område | Timmar | Person |
+|-------|-----------|--------|--------|--------|
+| 2026-04-15 | Beskärning | Gravensteiner | 4.5 | Tomas |
+| 2026-04-15 | Beskärning | Gravensteiner | 5.0 | Mats |
+
+Sorterad kronologiskt. Sista raden: **Summa timmar** (totalt).
+
+Om xlsx-generering på servern är för tungt, använd CSV som fallback — det öppnas i Excel direkt.
 
 ---
 
@@ -248,10 +330,18 @@ Filen `orchard_map_v3.jsx` innehåller en fungerande spatial kartlayout. Använd
 7. ~~Positionsdetalj med historik~~
 8. ~~Filtrera karta efter event-typ~~
 
+### Fas 2b — Arbetspass & Länsstyrelse-export (ny)
+9. Lägg till `duration_hours` i event-datamodellen
+10. Bygg work_session-formuläret (`/work-session`, POST till befintligt `/api/events`)
+11. Bygg export-endpoint (`/api/export/work-sessions`)
+12. Bygg export-vy (`/export`) med förhandsvisning och nedladdning
+
+**Bakgrund:** Odlingen har beviljats kulturmiljöbidrag från Länsstyrelsen Skåne (dnr 30557-2025, 59 000 kr). Redovisning krävs senast 15 oktober 2026 med logg över utförda åtgärder: datum, åtgärd, timmar, vem. Denna fas bygger exportfunktionen som genererar den redovisningen direkt ur appens data.
+
 ### Fas 3 — Analys & export
-9. CSV-export av positioner och events
-10. Jämförelsevy (gödslade vs ogödslade)
-11. Årsöversikt
+13. CSV-export av positioner och events
+14. Jämförelsevy (gödslade vs ogödslade)
+15. Årsöversikt
 
 ---
 
@@ -280,7 +370,8 @@ appelodlingen/
 │   │   │   ├── events.ts
 │   │   │   ├── auth.ts
 │   │   │   ├── stats.ts
-│   │   │   └── seed.ts
+│   │   │   ├── seed.ts
+│   │   │   └── export.ts        # Work session export
 │   │   └── lib/
 │   │       ├── cosmos.ts         # Cosmos DB client
 │   │       └── auth.ts           # PIN-validering
@@ -310,7 +401,9 @@ appelodlingen/
 │   │   ├── InventoryPage.tsx
 │   │   ├── PositionDetailPage.tsx
 │   │   ├── QuarterPage.tsx
-│   │   └── LogEventPage.tsx
+│   │   ├── LogEventPage.tsx
+│   │   ├── WorkSessionPage.tsx   # Logga arbetspass
+│   │   └── ExportPage.tsx        # Exportera redovisning
 │   ├── hooks/
 │   │   ├── usePositions.ts
 │   │   ├── useEvents.ts
@@ -382,3 +475,5 @@ const QUARTERS = {
 5. **Sorter per kvarter ≠ sorter per träd** — kvarteret heter "Gravensteiner" men enskilda träd kan vara andra sorter (insådd, omympad etc.). `species` på position-nivå kan skilja sig.
 
 6. **Språk:** Allt användargränssnitt på svenska. Koden (variabelnamn, kommentarer) på engelska.
+
+7. **Arbetspass är separata från positions-events** — `work_session` loggar tid per person och dag mot ett kvarter eller hela odlingen, inte mot enskilda trädpositioner. Det speglar hur arbete faktiskt utförs ("vi beskärde i 4 timmar") snarare än att tvinga fram tidrapportering per träd.
