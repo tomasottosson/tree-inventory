@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { EventType } from '../../lib/types'
+import { SwedishDatePicker } from '../ui/SwedishDatePicker'
 
 const EVENT_TYPES: { id: EventType; label: string; icon: string }[] = [
   { id: 'fertilization', label: 'Gödsling', icon: '🌱' },
@@ -134,10 +135,9 @@ export function EventForm({ onSubmit, loading }: Props) {
         <label className="text-xs font-medium text-stone-500 uppercase tracking-wide mb-1.5 block">
           Datum
         </label>
-        <input
-          type="date"
+        <SwedishDatePicker
           value={date}
-          onChange={(e) => setDate(e.target.value)}
+          onChange={setDate}
           className="w-full px-3 py-2.5 rounded-xl border border-stone-200 text-stone-800 text-sm bg-white"
           required
         />

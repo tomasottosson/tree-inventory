@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useCreateEvent } from '../hooks/useEvents'
 import { WORK_SESSION_ACTIVITIES, WORK_SESSION_AREAS } from '../lib/constants'
+import { SwedishDatePicker } from '../components/ui/SwedishDatePicker'
 
 function today(): string {
   return new Date().toISOString().slice(0, 10)
@@ -86,10 +87,9 @@ export function WorkSessionPage() {
         {/* Datum */}
         <div>
           <label className="block text-sm font-medium text-stone-700 mb-1.5">Datum</label>
-          <input
-            type="date"
+          <SwedishDatePicker
             value={date}
-            onChange={(e) => setDate(e.target.value)}
+            onChange={setDate}
             className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-white text-stone-800 text-base focus:outline-none focus:ring-2 focus:ring-stone-400"
             required
           />

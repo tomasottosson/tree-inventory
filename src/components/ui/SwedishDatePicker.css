@@ -1,0 +1,91 @@
+/* Mobile-optimised overrides for flatpickr */
+
+/* Fill the form column width */
+.flatpickr-calendar {
+  width: 100% !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+  border-radius: 12px !important;
+  font-size: 16px !important;
+}
+
+.flatpickr-days,
+.flatpickr-rContainer {
+  width: 100% !important;
+}
+
+.dayContainer {
+  width: 100% !important;
+  min-width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Day cells — minimum 44×44px touch target, exactly 7 per row */
+.flatpickr-day {
+  flex: 0 0 calc(100% / 7) !important;
+  max-width: calc(100% / 7) !important;
+  height: 44px !important;
+  line-height: 44px !important;
+  font-size: 16px !important;
+  border-radius: 8px !important;
+}
+
+/* Weekday header row */
+.flatpickr-weekdays,
+.flatpickr-weekdaycontainer {
+  width: 100% !important;
+}
+
+.flatpickr-weekday {
+  flex: 1;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #78716c !important; /* stone-500 — good outdoor contrast */
+}
+
+/* Month/year header */
+.flatpickr-current-month {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  padding-top: 0 !important;
+}
+
+/* Nav arrows — 44×44px touch target */
+.flatpickr-months {
+  align-items: center;
+}
+
+.flatpickr-prev-month,
+.flatpickr-next-month {
+  width: 44px !important;
+  height: 44px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  top: 0 !important;
+}
+
+.flatpickr-prev-month svg,
+.flatpickr-next-month svg {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+/* Selected day — high contrast for outdoor use */
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover {
+  background: #292524 !important; /* stone-800 — matches app theme */
+  border-color: #292524 !important;
+  color: #fff !important;
+}
+
+.flatpickr-day.today {
+  border-color: #a8a29e !important; /* stone-400 */
+  font-weight: 700;
+}
+
+/* Out-of-month days — keep readable */
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay {
+  color: #d6d3d1 !important; /* stone-300 */
+}

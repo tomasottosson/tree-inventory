@@ -5,4 +5,6 @@ dist
 api/local.settings.json
 api/dist
 .DS_Store
+.claude/settings.local.json
+.playwright-mcp/
 infra/main.bicepparam
