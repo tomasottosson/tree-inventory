@@ -1,8 +1,9 @@
 /* Mobile-optimised overrides for flatpickr */
 
-/* Fill the form column width */
+/* Fill the form column on mobile, cap on desktop */
 .flatpickr-calendar {
   width: 100% !important;
+  max-width: 340px !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
   border-radius: 12px !important;
   font-size: 16px !important;
