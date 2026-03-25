@@ -3,6 +3,7 @@ import flatpickr from 'flatpickr'
 import type { Instance } from 'flatpickr/dist/types/instance'
 import { Swedish } from 'flatpickr/dist/l10n/sv'
 import 'flatpickr/dist/flatpickr.min.css'
+import './SwedishDatePicker.css'
 
 interface Props {
   value: string
