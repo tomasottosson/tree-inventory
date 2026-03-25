@@ -3,6 +3,7 @@ import { useWorkSessions } from '../hooks/useEvents'
 import { api } from '../lib/api'
 import { WORK_SESSION_AREAS } from '../lib/constants'
 import type { Event } from '../lib/types'
+import { SwedishDatePicker } from '../components/ui/SwedishDatePicker'
 
 const AREA_LABEL: Record<string, string> = Object.fromEntries(
   WORK_SESSION_AREAS.map((a) => [a.id, a.label])
@@ -41,19 +42,17 @@ export function ExportPage() {
       <div className="grid grid-cols-2 gap-3 mb-6">
         <div>
           <label className="block text-xs font-medium text-stone-500 mb-1">Från</label>
-          <input
-            type="date"
+          <SwedishDatePicker
             value={from}
-            onChange={(e) => setFrom(e.target.value)}
+            onChange={setFrom}
             className="w-full px-3 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
           />
         </div>
         <div>
           <label className="block text-xs font-medium text-stone-500 mb-1">Till</label>
-          <input
-            type="date"
+          <SwedishDatePicker
             value={to}
-            onChange={(e) => setTo(e.target.value)}
+            onChange={setTo}
             className="w-full px-3 py-2.5 rounded-xl border border-stone-200 bg-white text-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
           />
         </div>
