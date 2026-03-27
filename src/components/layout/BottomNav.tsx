@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom'
 const tabs = [
   { to: '/dashboard', label: 'Översikt', icon: '📊' },
   { to: '/map', label: 'Karta', icon: '🗺' },
-  { to: '/inventory', label: 'Inventera', icon: '📋' },
+  { to: '/maintenance', label: 'Åtgärder', icon: '🌿' },
   { to: '/work-session', label: 'Logga', icon: '⏱' },
 ]
 

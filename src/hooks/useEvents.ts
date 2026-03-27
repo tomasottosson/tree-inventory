@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../lib/api'
-import type { CreateEventPayload } from '../lib/types'
+import type { BatchEventPayload, CreateEventPayload } from '../lib/types'
 
 export function useEvents(params: { positionId?: string; quarterId?: string; type?: string }) {
   return useQuery({
@@ -24,6 +24,16 @@ export function useCreateEvent() {
     mutationFn: (data: CreateEventPayload) => api.createEvent(data),
     onSuccess: (_result, data) => {
       qc.invalidateQueries({ queryKey: ['events', { positionId: data.positionId }] })
+      qc.invalidateQueries({ queryKey: ['events', { quarterId: data.quarterId }] })
+    },
+  })
+}
+
+export function useCreateBatchEvents() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data: BatchEventPayload) => api.createBatchEvents(data),
+    onSuccess: (_result, data) => {
       qc.invalidateQueries({ queryKey: ['events', { quarterId: data.quarterId }] })
     },
   })

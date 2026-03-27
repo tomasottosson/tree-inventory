@@ -9,6 +9,7 @@ import { InventoryPage } from './pages/InventoryPage'
 import { PositionDetailPage } from './pages/PositionDetailPage'
 import { WorkSessionPage } from './pages/WorkSessionPage'
 import { ExportPage } from './pages/ExportPage'
+import { MaintenancePage } from './pages/MaintenancePage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,6 +32,7 @@ function AuthGate() {
         <Route path="/map" element={<MapPage />} />
         <Route path="/inventory" element={<InventoryPage />} />
         <Route path="/position/:id" element={<PositionDetailPage />} />
+        <Route path="/maintenance" element={<MaintenancePage />} />
         <Route path="/work-session" element={<WorkSessionPage />} />
         <Route path="/export" element={<ExportPage />} />
       </Route>

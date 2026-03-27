@@ -32,9 +32,10 @@ export interface EventFormData {
 interface Props {
   onSubmit: (data: EventFormData) => void
   loading?: boolean
+  submitLabel?: string
 }
 
-export function EventForm({ onSubmit, loading }: Props) {
+export function EventForm({ onSubmit, loading, submitLabel }: Props) {
   const today = new Date().toISOString().slice(0, 10)
   const [type, setType] = useState<EventType>('fertilization')
   const [date, setDate] = useState(today)
@@ -328,7 +329,7 @@ export function EventForm({ onSubmit, loading }: Props) {
         disabled={loading}
         className="py-4 rounded-xl bg-stone-800 text-white font-medium text-base active:bg-stone-700 disabled:opacity-50"
       >
-        {loading ? 'Sparar...' : 'Spara händelse'}
+        {loading ? 'Sparar...' : (submitLabel ?? 'Spara händelse')}
       </button>
     </form>
   )

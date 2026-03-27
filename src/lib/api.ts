@@ -61,5 +61,11 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
+  createBatchEvents: (data: import('./types').BatchEventPayload) =>
+    request<import('./types').BatchEventResponse>('/events/batch', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
   seed: () => request<{ created: number }>('/seed', { method: 'POST' }),
 }
