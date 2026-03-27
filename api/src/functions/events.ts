@@ -75,3 +75,42 @@ app.http('createEvent', {
     return { status: 201, jsonBody: resource }
   },
 })
+
+// Note: 'events/batch' must stay registered before any future 'events/{id}' route
+// to avoid Azure Functions interpreting 'batch' as an id parameter.
+app.http('createBatchEvents', {
+  methods: ['POST'],
+  route: 'events/batch',
+  handler: async (req: HttpRequest): Promise<HttpResponseInit> => {
+    const body = (await req.json()) as Record<string, unknown>
+    const positions = body.positions as string[] | undefined
+
+    if (!positions || !Array.isArray(positions) || positions.length === 0) {
+      return { status: 400, jsonBody: { error: 'positions array is required' } }
+    }
+    if (!body.type || !body.date) {
+      return { status: 400, jsonBody: { error: 'type and date are required' } }
+    }
+
+    const container = getContainer('events')
+    const createdAt = new Date().toISOString()
+
+    const results = await Promise.all(
+      positions.map((positionId) =>
+        container.items.create({
+          id: `evt-${crypto.randomUUID()}`,
+          positionId,
+          quarterId: body.quarterId,
+          type: body.type,
+          date: body.date,
+          details: body.details || {},
+          notes: body.notes || '',
+          createdBy: body.createdBy || 'unknown',
+          createdAt,
+        })
+      )
+    )
+
+    return { status: 201, jsonBody: { created: results.length } }
+  },
+})

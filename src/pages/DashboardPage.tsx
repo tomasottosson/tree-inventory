@@ -28,13 +28,13 @@ export function DashboardPage() {
       </div>
 
       {/* Quick actions */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
+      <div className="grid grid-cols-2 gap-3 mb-3">
         <button
-          onClick={() => navigate('/inventory')}
+          onClick={() => navigate('/maintenance')}
           className="py-5 px-4 bg-stone-800 text-white rounded-2xl text-left"
         >
-          <span className="text-2xl block mb-1">📋</span>
-          <span className="font-medium">Inventera</span>
+          <span className="text-2xl block mb-1">🌿</span>
+          <span className="font-medium">Åtgärder</span>
         </button>
         <button
           onClick={() => navigate('/map')}
@@ -58,6 +58,19 @@ export function DashboardPage() {
           <span className="font-medium">Exportera redovisning</span>
         </button>
       </div>
+
+      {/* Inventory nudge — Ingrid Marie still in progress */}
+      <button
+        onClick={() => navigate('/inventory')}
+        className="w-full flex items-center gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-left mb-6"
+      >
+        <span className="text-lg">📋</span>
+        <div>
+          <div className="text-sm font-medium text-amber-900">Fortsätt inventera</div>
+          <div className="text-xs text-amber-700">Ingrid Marie ej klar</div>
+        </div>
+        <span className="ml-auto text-amber-400 text-sm">→</span>
+      </button>
 
       {/* Stats */}
       {isLoading ? (

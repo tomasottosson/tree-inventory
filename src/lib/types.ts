@@ -78,3 +78,17 @@ export interface AuthResponse {
   user: User
   token: string
 }
+
+export interface BatchEventPayload {
+  positions: string[]
+  quarterId: string
+  type: EventType
+  date: string
+  details: Record<string, unknown>
+  notes: string
+  createdBy: string
+}
+
+export interface BatchEventResponse {
+  created: number
+}
