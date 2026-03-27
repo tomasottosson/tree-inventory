@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+  <!-- Background -->
+  <rect width="180" height="180" fill="#1c1917"/>
+  <!-- Apple body - left lobe brighter -->
+  <path d="M90 72 C72 50 25 54 14 94 C4 133 36 166 90 166 C144 166 176 133 166 94 C155 54 108 50 90 72Z"
+        fill="#dc2626"/>
+  <!-- Apple body - right side darker for depth -->
+  <path d="M90 72 C108 50 155 54 166 94 C176 133 144 166 90 166 C122 158 144 130 144 98 C144 68 114 54 90 72Z"
+        fill="#b91c1c"/>
+  <!-- Stem -->
+  <path d="M90 72 C94 50 108 36 104 22"
+        stroke="#92400e" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+  <!-- Leaf -->
+  <path d="M102 45 C120 30 140 43 128 60 C117 50 106 49 102 45Z"
+        fill="#16a34a"/>
+  <!-- Leaf vein -->
+  <path d="M102 45 C113 50 122 55 128 60"
+        stroke="#15803d" stroke-width="1.5" fill="none"/>
+  <!-- Highlight gloss large -->
+  <ellipse cx="54" cy="103" rx="15" ry="26" fill="rgba(255,255,255,0.18)"
+           transform="rotate(-20,54,103)"/>
+  <!-- Highlight gloss small bright -->
+  <ellipse cx="47" cy="91" rx="7" ry="11" fill="rgba(255,255,255,0.28)"
+           transform="rotate(-20,47,91)"/>
+</svg>

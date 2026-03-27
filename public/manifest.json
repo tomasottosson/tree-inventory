@@ -1,0 +1,17 @@
+{
+  "name": "Äppelodlingen",
+  "short_name": "Äppelodlingen",
+  "description": "Fältapp för inventering och skötsel av äppelodlingen vid Kivik",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1c1917",
+  "theme_color": "#1c1917",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
