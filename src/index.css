@@ -19,3 +19,9 @@ body {
   font-family: system-ui, -apple-system, sans-serif;
   background: #fafaf9;
 }
+
+@media (display-mode: standalone) {
+  body {
+    padding-top: env(safe-area-inset-top);
+  }
+}
