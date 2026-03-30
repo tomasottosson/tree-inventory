@@ -40,6 +40,7 @@ export interface Stats {
   quarters: QuarterStats[]
   totalPositions: number
   totalInventoried: number
+  eventStats: Partial<Record<EventType, number>>
 }
 
 export type EventType = 'fertilization' | 'pruning' | 'observation' | 'harvest' | 'treatment' | 'other' | 'work_session'

@@ -43,6 +43,22 @@ app.http('getStats', {
     const totalPositions = quarters.reduce((s, q) => s + q.total, 0)
     const totalInventoried = quarters.reduce((s, q) => s + q.inventoried, 0)
 
-    return { jsonBody: { quarters, totalPositions, totalInventoried } }
+    // Count distinct positions per event type
+    const eventsContainer = getContainer('events')
+    const { resources: eventRows } = await eventsContainer.items
+      .query('SELECT c.positionId, c.type FROM c WHERE c.type != "work_session"')
+      .fetchAll()
+
+    const eventCoverage: Record<string, Set<string>> = {}
+    for (const e of eventRows) {
+      if (!eventCoverage[e.type]) eventCoverage[e.type] = new Set()
+      eventCoverage[e.type].add(e.positionId)
+    }
+
+    const eventStats = Object.fromEntries(
+      Object.entries(eventCoverage).map(([type, ids]) => [type, ids.size])
+    )
+
+    return { jsonBody: { quarters, totalPositions, totalInventoried, eventStats } }
   },
 })

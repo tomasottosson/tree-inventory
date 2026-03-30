@@ -73,33 +73,34 @@ export function ExportPage() {
             <thead>
               <tr className="border-b border-stone-100 bg-stone-50">
                 <th className="text-left px-4 py-3 font-medium text-stone-600">Datum</th>
+                <th className="text-right px-4 py-3 font-medium text-stone-600">Tim</th>
                 <th className="text-left px-4 py-3 font-medium text-stone-600">Person</th>
                 <th className="text-left px-4 py-3 font-medium text-stone-600">Aktivitet</th>
                 <th className="text-left px-4 py-3 font-medium text-stone-600">Område</th>
-                <th className="text-right px-4 py-3 font-medium text-stone-600">Tim</th>
               </tr>
             </thead>
             <tbody>
               {sessions.map((e) => (
                 <tr key={e.id} className="border-b border-stone-50 last:border-0">
                   <td className="px-4 py-3 text-stone-700 tabular-nums">{e.date}</td>
-                  <td className="px-4 py-3 text-stone-700">{capitalize(e.createdBy)}</td>
-                  <td className="px-4 py-3 text-stone-700">{formatActivity(e)}</td>
-                  <td className="px-4 py-3 text-stone-500">{AREA_LABEL[e.positionId] ?? e.positionId}</td>
                   <td className="px-4 py-3 text-stone-700 text-right tabular-nums">
                     {e.duration_hours ?? '–'}
                   </td>
+                  <td className="px-4 py-3 text-stone-700">{capitalize(e.createdBy)}</td>
+                  <td className="px-4 py-3 text-stone-700">{formatActivity(e)}</td>
+                  <td className="px-4 py-3 text-stone-500">{AREA_LABEL[e.positionId] ?? e.positionId}</td>
                 </tr>
               ))}
             </tbody>
             <tfoot>
               <tr className="bg-stone-50 border-t border-stone-200">
-                <td colSpan={4} className="px-4 py-3 font-semibold text-stone-800">
+                <td className="px-4 py-3 font-semibold text-stone-800">
                   Summa
                 </td>
                 <td className="px-4 py-3 font-semibold text-stone-800 text-right tabular-nums">
                   {totalHours}
                 </td>
+                <td colSpan={3}></td>
               </tr>
             </tfoot>
           </table>
