@@ -32,6 +32,9 @@ app.http('getEvents', {
       parameters.push({ name: '@type', value: type })
       parameters.push({ name: '@from', value: from })
       parameters.push({ name: '@to', value: to })
+    } else if (type) {
+      query = 'SELECT * FROM c WHERE c.type = @type ORDER BY c.date DESC'
+      parameters.push({ name: '@type', value: type })
     } else {
       query = 'SELECT * FROM c ORDER BY c.date DESC'
     }
