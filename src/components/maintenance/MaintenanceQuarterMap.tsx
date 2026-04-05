@@ -41,7 +41,7 @@ function groupIntoRows(positions: Position[]): RowData[] {
 }
 
 function isSelectable(p: Position) {
-  return p.type === 'tree'
+  return p.type === 'tree' && (p.condition === 'healthy' || p.condition === 'weak')
 }
 
 const OVERLAY_DONE: OverlayColor = { bg: '#22c55e', border: '#15803d' }
@@ -53,7 +53,7 @@ function getOverlayColor(
   eventSet: Set<string>
 ): OverlayColor | null {
   if (overlayMode === 'condition') return null
-  if (position.type !== 'tree') return null
+  if (!isSelectable(position)) return null
   return eventSet.has(position.id) ? OVERLAY_DONE : OVERLAY_MISSING
 }
 

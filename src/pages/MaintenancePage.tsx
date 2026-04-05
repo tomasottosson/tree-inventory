@@ -37,12 +37,20 @@ export function MaintenancePage() {
   )
 
   const treeTotal = useMemo(
-    () => (positions ?? []).filter((p) => p.type === 'tree').length,
+    () =>
+      (positions ?? []).filter(
+        (p) => p.type === 'tree' && (p.condition === 'healthy' || p.condition === 'weak')
+      ).length,
     [positions]
   )
   const doneCount = useMemo(
     () =>
-      (positions ?? []).filter((p) => p.type === 'tree' && eventSet.has(p.id)).length,
+      (positions ?? []).filter(
+        (p) =>
+          p.type === 'tree' &&
+          (p.condition === 'healthy' || p.condition === 'weak') &&
+          eventSet.has(p.id)
+      ).length,
     [positions, eventSet]
   )
   const donePct = treeTotal > 0 ? Math.round((doneCount / treeTotal) * 100) : 0
