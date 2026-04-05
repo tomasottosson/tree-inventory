@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, useMemo } from 'react'
 import type { Position } from '../../lib/types'
 import { PositionDot } from '../map/PositionDot'
+import type { OverlayColor } from '../map/PositionDot'
+import type { OverlayMode } from '../../lib/eventOverlay'
 
 interface RowData {
   label: string
@@ -12,6 +14,8 @@ interface Props {
   quarterId: string
   selected: Set<string>
   onChange: (selected: Set<string>) => void
+  overlayMode?: OverlayMode
+  eventSet?: Set<string>
 }
 
 function groupIntoRows(positions: Position[]): RowData[] {
@@ -40,7 +44,27 @@ function isSelectable(p: Position) {
   return p.type === 'tree'
 }
 
-export function MaintenanceQuarterMap({ positions, quarterId, selected, onChange }: Props) {
+const OVERLAY_DONE: OverlayColor = { bg: '#22c55e', border: '#15803d' }
+const OVERLAY_MISSING: OverlayColor = { bg: '#fca5a5', border: '#dc2626' }
+
+function getOverlayColor(
+  position: Position,
+  overlayMode: OverlayMode,
+  eventSet: Set<string>
+): OverlayColor | null {
+  if (overlayMode === 'condition') return null
+  if (position.type !== 'tree') return null
+  return eventSet.has(position.id) ? OVERLAY_DONE : OVERLAY_MISSING
+}
+
+export function MaintenanceQuarterMap({
+  positions,
+  quarterId,
+  selected,
+  onChange,
+  overlayMode = 'condition',
+  eventSet,
+}: Props) {
   const [zoom, setZoom] = useState(1)
   const containerRef = useRef<HTMLDivElement>(null)
   const selectionRef = useRef(selected)
@@ -51,6 +75,9 @@ export function MaintenanceQuarterMap({ positions, quarterId, selected, onChange
 
   const cs = Math.round(14 * zoom)
   const g = Math.max(1, Math.round(2 * zoom))
+
+  const effectiveEventSet = eventSet ?? new Set<string>()
+  const isOverlay = overlayMode !== 'condition'
 
   const { mainRows, pumpRows } = useMemo(() => {
     if (quarterId === 'gravensteiner') {
@@ -194,24 +221,60 @@ export function MaintenanceQuarterMap({ positions, quarterId, selected, onChange
         >
           {row.label}
         </button>
-        {row.positions.map((p) => (
-          <div
-            key={p.id}
-            data-position-id={p.id}
-            style={{
-              borderRadius: '50%',
-              boxShadow: selected.has(p.id) ? '0 0 0 2px #f59e0b, 0 0 0 3px #fff, 0 0 0 5px #f59e0b' : undefined,
-            }}
-          >
-            <PositionDot
-              position={p}
-              size={cs}
-            />
-          </div>
-        ))}
+        {row.positions.map((p) => {
+          const showNumber = p.position === 1 || p.position % 10 === 0
+          const overlayColor = getOverlayColor(p, overlayMode, effectiveEventSet)
+          return (
+            <div
+              key={p.id}
+              data-position-id={p.id}
+              style={{
+                position: 'relative',
+                borderRadius: '50%',
+                boxShadow: selected.has(p.id) ? '0 0 0 2px #f59e0b, 0 0 0 3px #fff, 0 0 0 5px #f59e0b' : undefined,
+              }}
+            >
+              <PositionDot
+                position={p}
+                size={cs}
+                overlayColor={overlayColor}
+              />
+              {showNumber && (
+                <span
+                  className="absolute text-stone-300 select-none pointer-events-none"
+                  style={{
+                    fontSize: 8,
+                    fontFamily: 'monospace',
+                    left: cs + 2,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    lineHeight: 1,
+                  }}
+                >
+                  {p.position}
+                </span>
+              )}
+            </div>
+          )
+        })}
       </div>
     )
   }
+
+  const rowSummaries = useMemo(() => {
+    if (!isOverlay) return []
+    const allRows = [...mainRows, ...pumpRows]
+    return allRows.map((r) => {
+      const trees = r.positions.filter(isSelectable)
+      const done = trees.filter((p) => effectiveEventSet.has(p.id)).length
+      return {
+        label: r.label,
+        done,
+        total: trees.length,
+        pct: trees.length > 0 ? Math.round((done / trees.length) * 100) : 0,
+      }
+    })
+  }, [isOverlay, mainRows, pumpRows, effectiveEventSet])
 
   return (
     <div>
@@ -268,6 +331,48 @@ export function MaintenanceQuarterMap({ positions, quarterId, selected, onChange
       <p className="text-xs text-stone-400 mt-1.5">
         Tryck på radetikett för att markera hela raden · Dra för att markera flera
       </p>
+
+      {/* Row summary grid */}
+      {isOverlay && rowSummaries.length > 0 && (
+        <div
+          className="mt-3 grid gap-2"
+          style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))' }}
+        >
+          {rowSummaries.map((r) => {
+            const complete = r.total > 0 && r.done === r.total
+            return (
+              <div
+                key={r.label}
+                className="bg-stone-50 rounded-xl px-3 py-2 border border-stone-200"
+              >
+                <div className="flex items-baseline justify-between mb-1">
+                  <span
+                    className="text-sm font-mono font-medium"
+                    style={{ color: complete ? '#15803d' : undefined }}
+                  >
+                    {r.label}
+                  </span>
+                  <span
+                    className="text-xs"
+                    style={{ color: complete ? '#15803d' : '#78716c' }}
+                  >
+                    {r.done}/{r.total}
+                  </span>
+                </div>
+                <div className="h-1 bg-stone-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${r.pct}%`,
+                      background: complete ? '#15803d' : '#f59e0b',
+                    }}
+                  />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

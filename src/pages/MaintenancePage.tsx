@@ -1,11 +1,21 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { usePositions } from '../hooks/usePositions'
-import { useCreateBatchEvents } from '../hooks/useEvents'
+import { useCreateBatchEvents, useEventOverlay } from '../hooks/useEvents'
 import { useAuth } from '../hooks/useAuth'
 import { QUARTERS } from '../lib/constants'
+import {
+  buildEventSet,
+  OVERLAY_LABELS,
+  SEASON_LABELS,
+  OVERLAY_DONE_LABELS,
+} from '../lib/eventOverlay'
+import type { OverlayMode, SeasonFilter } from '../lib/eventOverlay'
 import { MaintenanceQuarterMap } from '../components/maintenance/MaintenanceQuarterMap'
 import { MaintenanceEventForm } from '../components/maintenance/MaintenanceEventForm'
 import type { EventFormData } from '../components/events/EventForm'
+
+const OVERLAY_MODES: OverlayMode[] = ['condition', 'pruning', 'fertilization']
+const SEASON_FILTERS: SeasonFilter[] = ['current', 'previous', 'all']
 
 export function MaintenancePage() {
   const { user } = useAuth()
@@ -13,9 +23,29 @@ export function MaintenancePage() {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [overlayMode, setOverlayMode] = useState<OverlayMode>('condition')
+  const [seasonFilter, setSeasonFilter] = useState<SeasonFilter>('current')
 
   const { data: positions, isLoading, isError } = usePositions(quarterId)
   const batchCreate = useCreateBatchEvents()
+
+  const eventType = overlayMode !== 'condition' ? overlayMode : undefined
+  const { data: overlayEvents } = useEventOverlay(quarterId, eventType)
+  const eventSet = useMemo(
+    () => (overlayEvents ? buildEventSet(overlayEvents, seasonFilter) : new Set<string>()),
+    [overlayEvents, seasonFilter]
+  )
+
+  const treeTotal = useMemo(
+    () => (positions ?? []).filter((p) => p.type === 'tree').length,
+    [positions]
+  )
+  const doneCount = useMemo(
+    () =>
+      (positions ?? []).filter((p) => p.type === 'tree' && eventSet.has(p.id)).length,
+    [positions, eventSet]
+  )
+  const donePct = treeTotal > 0 ? Math.round((doneCount / treeTotal) * 100) : 0
 
   function changeQuarter(id: string) {
     setQuarterId(id)
@@ -53,6 +83,12 @@ export function MaintenancePage() {
       }
     )
   }
+
+  const isOverlay = overlayMode !== 'condition'
+  const doneLabel =
+    overlayMode === 'pruning' || overlayMode === 'fertilization'
+      ? OVERLAY_DONE_LABELS[overlayMode]
+      : ''
 
   return (
     <div className="p-4 max-w-lg mx-auto pb-32">
@@ -100,6 +136,62 @@ export function MaintenancePage() {
         ))}
       </div>
 
+      {/* Overlay toggle */}
+      <div className="flex gap-2 mb-2">
+        {OVERLAY_MODES.map((mode) => (
+          <button
+            key={mode}
+            type="button"
+            onClick={() => setOverlayMode(mode)}
+            className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+              overlayMode === mode
+                ? 'bg-stone-800 text-white'
+                : 'bg-stone-100 text-stone-600 active:bg-stone-200'
+            }`}
+          >
+            {OVERLAY_LABELS[mode]}
+          </button>
+        ))}
+      </div>
+
+      {/* Season filter */}
+      {isOverlay && (
+        <div className="flex gap-3 mb-2">
+          {SEASON_FILTERS.map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setSeasonFilter(f)}
+              className={`text-xs px-2 py-1 border-b-2 transition-colors ${
+                seasonFilter === f
+                  ? 'border-stone-800 font-medium text-stone-800'
+                  : 'border-transparent text-stone-500'
+              }`}
+            >
+              {SEASON_LABELS[f]}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Progress bar */}
+      {isOverlay && treeTotal > 0 && (
+        <div className="mb-3">
+          <div className="flex items-baseline justify-between mb-1 text-xs text-stone-600">
+            <span>
+              {doneCount} av {treeTotal} {doneLabel}
+            </span>
+            <span className="font-medium">{donePct}%</span>
+          </div>
+          <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full"
+              style={{ width: `${donePct}%`, background: '#15803d' }}
+            />
+          </div>
+        </div>
+      )}
+
       {isLoading ? (
         <div className="text-center text-stone-400 py-12">Laddar positioner...</div>
       ) : isError ? (
@@ -113,6 +205,8 @@ export function MaintenancePage() {
               quarterId={quarterId}
               selected={selected}
               onChange={setSelected}
+              overlayMode={overlayMode}
+              eventSet={eventSet}
             />
           </div>
 

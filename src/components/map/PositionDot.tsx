@@ -1,22 +1,34 @@
 import type { Position } from '../../lib/types'
 import { CONDITION_COLORS } from '../../lib/constants'
 
+export interface OverlayColor {
+  bg: string
+  border: string
+  borderStyle?: string
+}
+
 interface Props {
   position: Position
   size: number
   onClick?: () => void
+  overlayColor?: OverlayColor | null
 }
 
-export function PositionDot({ position, size, onClick }: Props) {
+export function PositionDot({ position, size, onClick, overlayColor }: Props) {
   const isLandmark = position.type === 'landmark'
   const isEmpty = position.type === 'empty'
   const isStump = position.type === 'stump'
+  const isTree = position.type === 'tree'
 
   let bg: string
   let border: string
   let borderStyle = 'solid'
 
-  if (isEmpty) {
+  if (overlayColor && isTree) {
+    bg = overlayColor.bg
+    border = overlayColor.border
+    borderStyle = overlayColor.borderStyle ?? 'solid'
+  } else if (isEmpty) {
     bg = 'transparent'
     border = '#a3a3a3'
     borderStyle = 'dashed'
