@@ -18,13 +18,35 @@ export function useWorkSessions(from: string, to: string) {
   })
 }
 
+export function useEventOverlay(
+  quarterId: string | undefined,
+  eventType: 'pruning' | 'fertilization' | undefined
+) {
+  return useQuery({
+    queryKey: ['events', { quarterId, type: eventType }],
+    queryFn: () => api.getEvents({ quarterId, type: eventType }),
+    enabled: !!quarterId && !!eventType,
+    staleTime: 60_000,
+  })
+}
+
+export function useAllEventOverlay(
+  eventType: 'pruning' | 'fertilization' | undefined
+) {
+  return useQuery({
+    queryKey: ['events', { type: eventType }],
+    queryFn: () => api.getEvents({ type: eventType }),
+    enabled: !!eventType,
+    staleTime: 60_000,
+  })
+}
+
 export function useCreateEvent() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (data: CreateEventPayload) => api.createEvent(data),
-    onSuccess: (_result, data) => {
-      qc.invalidateQueries({ queryKey: ['events', { positionId: data.positionId }] })
-      qc.invalidateQueries({ queryKey: ['events', { quarterId: data.quarterId }] })
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['events'] })
     },
   })
 }
@@ -33,8 +55,8 @@ export function useCreateBatchEvents() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (data: BatchEventPayload) => api.createBatchEvents(data),
-    onSuccess: (_result, data) => {
-      qc.invalidateQueries({ queryKey: ['events', { quarterId: data.quarterId }] })
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['events'] })
     },
   })
 }

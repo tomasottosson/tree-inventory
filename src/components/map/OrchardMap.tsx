@@ -2,6 +2,7 @@ import { useMemo, useState, useRef, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Position } from '../../lib/types'
 import { PositionDot } from './PositionDot'
+import type { OverlayColor } from './PositionDot'
 import { QUARTER_MAP } from '../../lib/constants'
 
 interface RowData {
@@ -44,11 +45,13 @@ function VerticalRow({
   cellSize,
   gap,
   onClickPosition,
+  overlayColorFn,
 }: {
   row: RowData
   cellSize: number
   gap: number
   onClickPosition: (id: string) => void
+  overlayColorFn?: (position: Position) => OverlayColor | null
 }) {
   return (
     <div
@@ -67,13 +70,19 @@ function VerticalRow({
           position={p}
           size={cellSize}
           onClick={() => onClickPosition(p.id)}
+          overlayColor={overlayColorFn ? overlayColorFn(p) : null}
         />
       ))}
     </div>
   )
 }
 
-export function OrchardMap({ positions }: { positions: Position[] }) {
+interface OrchardMapProps {
+  positions: Position[]
+  overlayColorFn?: (position: Position) => OverlayColor | null
+}
+
+export function OrchardMap({ positions, overlayColorFn }: OrchardMapProps) {
   const navigate = useNavigate()
   const [zoom, setZoom] = useState(1)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -208,6 +217,7 @@ export function OrchardMap({ positions }: { positions: Position[] }) {
               cellSize={cs}
               gap={g}
               onClickPosition={handleClick}
+              overlayColorFn={overlayColorFn}
             />
           ))}
         </div>

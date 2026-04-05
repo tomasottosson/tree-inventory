@@ -338,6 +338,275 @@ Filen `orchard_map_v3.jsx` innehåller en fungerande spatial kartlayout. Använd
 
 **Bakgrund:** Odlingen har beviljats kulturmiljöbidrag från Länsstyrelsen Skåne (dnr 30557-2025, 59 000 kr). Redovisning krävs senast 15 oktober 2026 med logg över utförda åtgärder: datum, åtgärd, timmar, vem. Denna fas bygger exportfunktionen som genererar den redovisningen direkt ur appens data.
 
+### Fas 2c — Event-overlay & säsongsfilter
+
+##### Bakgrund
+
+Åtgärdsvyn (`/maintenance`) låter användaren välja träd i en kartvy och logga events (beskärning, gödsling etc.). Problemet: kartan visar bara trädets *skick* (frisk/svag/död) — inte vilka träd som redan har fått en åtgärd denna säsong. Användaren kan inte se var "fronten" ligger, vilka rader som är klara, eller vilka träd som återstår.
+
+Denna fas lägger till ett **overlay-läge** på kartorna i `/maintenance` och `/map` som färgkodar träd efter om de har events av en vald typ, med möjlighet att filtrera per säsong.
+
+##### Vad som ska byggas
+
+###### 1. Overlay-toggle på MaintenanceQuarterMap
+
+Ovanför kartan i `MaintenanceQuarterMap` ska tre knappar (segmented control) visas:
+
+| Knapp | Internt värde | Beskrivning |
+|-------|--------------|-------------|
+| **Skick** | `condition` | Nuvarande beteende — PositionDot färgas efter condition |
+| **Beskärning** | `pruning` | Binärt grönt/rött: har/saknar beskärningsevent i valt datumintervall |
+| **Gödsling** | `fertilization` | Binärt grönt/rött: har/saknar gödslingssevent i valt datumintervall |
+
+Default: `condition` (befintligt beteende bevaras).
+
+Visuellt: tre knappar i en rad, aktiv knapp har `bg-stone-800 text-white`, inaktiva har `bg-stone-100 text-stone-600`. Samma stil som befintliga knappar i appen.
+
+###### 2. Säsongsfilter
+
+Under overlay-togglen, synlig **bara när overlay !== `condition`**, visas ett säsongsfilter:
+
+| Knapp | Logik |
+|-------|-------|
+| **Denna säsong** (default) | Visa events med `date >= YYYY-01-01` där YYYY = innevarande år |
+| **Förra säsongen** | Visa events med `date >= (YYYY-1)-01-01` OCH `date < YYYY-01-01` |
+| **Alla** | Ingen datumfiltrering |
+
+Visuellt: tre små knappar under overlay-togglen, kompakt stil (text-xs). Aktiv markeras med understrykning eller `font-medium`, inte bakgrundsfärg (för att skilja dem visuellt från overlay-togglen).
+
+###### 3. Färgkodning i event-overlay-läge
+
+När overlay är `pruning` eller `fertilization` ändras PositionDots färgsättning:
+
+| Typ | Har event i intervallet | Saknar event | Tom position | Stubbe |
+|-----|------------------------|-------------|--------------|--------|
+| **Fyllning** | `#22c55e` (grön) | `#fca5a5` (ljusröd) | transparent | `#92400e` (brun, oförändrat) |
+| **Ram** | `#15803d` | `#dc2626` | `#a3a3a3` dashed | `#78350f` (oförändrat) |
+
+Landmark-positioner visas oförändrat (`#8b5cf6`).
+
+###### 4. Progressbar och radsummering
+
+Synliga **bara när overlay !== `condition`**:
+
+**Progressbar** (visas ovanför kartan, under säsongsfiltret):
+- Text: `"{N} av {total} {beskurna|gödslade}"` till vänster, `"{X}%"` till höger
+- Tunn bar (6px hög, rundade hörn) med grön fyllnad
+
+**Radsummering** (visas under kartan):
+- Grid med kort per rad (`grid-template-columns: repeat(auto-fit, minmax(120px, 1fr))`)
+- Varje kort visar: radnamn, `{klara}/{totalt}`, tunn progressbar
+- Rad med 100% klar: text i grönt (`#15803d`), grön bar
+- Rad med <100%: text i `text-stone-500`, gul bar (`#f59e0b`)
+
+###### 5. Positionsnumrering
+
+Oavsett overlay-läge: visa positionsnummer vid var **10:e** position i raden, plus position 1. Visas som liten text (8px) till höger om pricken, färg `text-stone-300`. Gäller i `MaintenanceQuarterMap`.
+
+###### 6. Event-overlay på OrchardMap (kartvyn)
+
+Samma overlay-logik appliceras på den globala kartvyn (`/map`, `OrchardMap`-komponenten). Här visas alla tre kvarter samtidigt med samma toggle och säsongsfilter. Samma progressbar, men summerad per kvarter istället för per rad.
+
+---
+
+##### Datahämtning
+
+###### Vilken data behövs
+
+För att bygga overlay-settet behövs alla events av vald typ för valt kvarter (eller alla kvarter på `/map`). Det befintliga API:et stödjer detta redan:
+
+```
+GET /api/events?quarterId=gravensteiner&type=pruning
+```
+
+Returnerar alla events oavsett datum. Client-side filtreras sedan på `event.date` baserat på valt säsongsfilter.
+
+###### Ny React Query hook
+
+Skapa en ny hook `useEventOverlay` i `src/hooks/useEvents.ts`:
+
+```typescript
+export function useEventOverlay(
+  quarterId: string | undefined,
+  eventType: 'pruning' | 'fertilization' | undefined
+) {
+  return useQuery({
+    queryKey: ['events', { quarterId, type: eventType }],
+    queryFn: () => api.getEvents({ quarterId, type: eventType }),
+    enabled: !!quarterId && !!eventType,
+    staleTime: 60_000, // events ändras sällan under en session
+  })
+}
+```
+
+För OrchardMap (`/map`) behövs en variant utan quarterId-filter:
+
+```typescript
+export function useAllEventOverlay(
+  eventType: 'pruning' | 'fertilization' | undefined
+) {
+  return useQuery({
+    queryKey: ['events', { type: eventType }],
+    queryFn: () => api.getEvents({ type: eventType }),
+    enabled: !!eventType,
+    staleTime: 60_000,
+  })
+}
+```
+
+###### Bygg overlay-set client-side
+
+Hjälpfunktion (lägg i `src/lib/eventOverlay.ts`):
+
+```typescript
+import type { Event } from './types'
+
+export type SeasonFilter = 'current' | 'previous' | 'all'
+export type OverlayMode = 'condition' | 'pruning' | 'fertilization'
+
+export function buildEventSet(
+  events: Event[],
+  seasonFilter: SeasonFilter
+): Set<string> {
+  const now = new Date()
+  const currentYear = now.getFullYear()
+
+  const filtered = events.filter((e) => {
+    if (seasonFilter === 'all') return true
+    const year = parseInt(e.date.slice(0, 4))
+    if (seasonFilter === 'current') return year === currentYear
+    if (seasonFilter === 'previous') return year === currentYear - 1
+    return true
+  })
+
+  return new Set(filtered.map((e) => e.positionId))
+}
+```
+
+---
+
+##### Komponentändringar
+
+###### PositionDot — ny optional prop
+
+Lägg till en optional `overlayColor` prop. Om den är satt åsidosätter den condition-baserad färgning:
+
+```typescript
+interface Props {
+  position: Position
+  size: number
+  onClick?: () => void
+  overlayColor?: { bg: string; border: string; borderStyle?: string } | null
+}
+```
+
+Logik: om `overlayColor` finns och positionen är av type `tree`, använd den istället för condition-färgerna. Empty, stump och landmark behåller sina befintliga färger oavsett overlay.
+
+###### MaintenanceQuarterMap — nya props
+
+```typescript
+interface Props {
+  positions: Position[]
+  quarterId: string
+  selected: Set<string>
+  onChange: (selected: Set<string>) => void
+  overlayMode: OverlayMode
+  eventSet: Set<string> // positionIds som har event i valt intervall
+}
+```
+
+Komponenten beräknar `overlayColor` per position och skickar ner till PositionDot. Den renderar också positionsnumrering och radsummering.
+
+Overlay-togglen och säsongsfiltret renderas **inte** i MaintenanceQuarterMap — de renderas i MaintenancePage som hanterar state och datahämtning.
+
+###### MaintenancePage — nytt state och hämtning
+
+Nya state-variabler:
+
+```typescript
+const [overlayMode, setOverlayMode] = useState<OverlayMode>('condition')
+const [seasonFilter, setSeasonFilter] = useState<SeasonFilter>('current')
+```
+
+Hämta events:
+
+```typescript
+const eventType = overlayMode !== 'condition' ? overlayMode : undefined
+const { data: overlayEvents } = useEventOverlay(quarterId, eventType)
+const eventSet = useMemo(
+  () => overlayEvents ? buildEventSet(overlayEvents, seasonFilter) : new Set<string>(),
+  [overlayEvents, seasonFilter]
+)
+```
+
+Rendera overlay-toggle ovanför kartan, säsongsfilter under den (om relevant), och skicka `overlayMode` + `eventSet` till MaintenanceQuarterMap.
+
+**Viktigt:** När användaren byter kvarter eller overlay, ska eventSet tömmas medan ny data laddas. React Query hanterar detta automatiskt via query key.
+
+###### OrchardMap — samma logik
+
+Lägg till overlay-toggle och säsongsfilter i MapPage. OrchardMap får en ny prop `overlayColorFn` som returnerar overlay-färg per positionId, alternativt null (condition-läge). Progressbar visas per kvarter.
+
+---
+
+##### Layout i MaintenancePage
+
+Ordning uppifrån och ner:
+
+1. Rubrik "Åtgärder"
+2. Success/error-banners (befintligt)
+3. Kvartersväljare (befintligt)
+4. **Overlay-toggle** (ny) — tre knappar: Skick | Beskärning | Gödsling
+5. **Säsongsfilter** (ny, bara om overlay !== condition) — Denna säsong | Förra | Alla
+6. **Progressbar** (ny, bara om overlay !== condition)
+7. Karta med positionsnumrering (modifierad MaintenanceQuarterMap)
+8. **Radsummering** (ny, bara om overlay !== condition)
+9. Event-formulär med trädval (befintligt, alltid synligt)
+
+###### Invalidering efter event-loggning
+
+När `batchCreate.mutate` lyckas (onSuccess) invalideras redan `['events', { quarterId }]`. Eftersom overlay-hooken använder samma query key-mönster uppdateras overlay-data automatiskt. Inga ändringar behövs.
+
+---
+
+##### Design-detaljer
+
+- Overlay-knappar: samma storlek och stil som kvartersväljaren (px-3 py-2 rounded-xl text-sm)
+- Säsongsfilter-knappar: kompaktare (text-xs, px-2 py-1), understrykning på aktiv (border-b-2 border-stone-800)
+- Progressbar: 6px hög, `bg-stone-100` bak, grön fyllnad, `rounded-full`
+- Radsummering: `bg-stone-50` kort, `rounded-xl`, 4px progressbar inuti
+- Positionsnummer: 8px monospace, `text-stone-300`, absolut-positionerade till höger om pricken
+- All text på svenska
+
+##### Filer som berörs
+
+| Fil | Ändring |
+|-----|---------|
+| `src/lib/eventOverlay.ts` | **Ny fil** — buildEventSet, typer |
+| `src/hooks/useEvents.ts` | Lägg till useEventOverlay, useAllEventOverlay |
+| `src/components/map/PositionDot.tsx` | Ny optional overlayColor prop |
+| `src/components/maintenance/MaintenanceQuarterMap.tsx` | Nya props (overlayMode, eventSet), positionsnumrering, radsummering |
+| `src/pages/MaintenancePage.tsx` | Overlay-toggle, säsongsfilter, state, datahämtning |
+| `src/components/map/OrchardMap.tsx` | Overlay-stöd (lägre prioritet, kan göras efter MaintenancePage fungerar) |
+| `src/pages/MapPage.tsx` | Toggle + filter för OrchardMap (lägre prioritet) |
+
+##### Implementationsordning
+
+1. `eventOverlay.ts` — typer och buildEventSet
+2. `useEvents.ts` — nya hooks
+3. `PositionDot.tsx` — overlayColor prop
+4. `MaintenanceQuarterMap.tsx` — positionsnumrering + overlay-färgning + radsummering
+5. `MaintenancePage.tsx` — toggle, filter, state, sammankoppling
+6. Testa med riktig data
+7. (Sedan) `OrchardMap.tsx` + `MapPage.tsx` — samma logik för global kartvy
+
+##### Avgränsning
+
+- Inga nya API-endpoints behövs
+- Ingen ny datamodell — allt baseras på befintliga events
+- OrchardMap-overlay är en bonus, inte ett krav för denna fas
+- Offline-cache hanteras inte i denna fas
+
 ### Fas 3 — Analys & export
 13. CSV-export av positioner och events
 14. Jämförelsevy (gödslade vs ogödslade)
