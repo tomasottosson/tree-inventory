@@ -338,7 +338,7 @@ Filen `orchard_map_v3.jsx` innehåller en fungerande spatial kartlayout. Använd
 
 **Bakgrund:** Odlingen har beviljats kulturmiljöbidrag från Länsstyrelsen Skåne (dnr 30557-2025, 59 000 kr). Redovisning krävs senast 15 oktober 2026 med logg över utförda åtgärder: datum, åtgärd, timmar, vem. Denna fas bygger exportfunktionen som genererar den redovisningen direkt ur appens data.
 
-### Fas 2c — Event-overlay & säsongsfilter
+### Fas 2c — Event-overlay & säsongsfilter (klar)
 
 ##### Bakgrund
 
