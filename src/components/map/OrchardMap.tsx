@@ -192,7 +192,7 @@ export function OrchardMap({ positions, overlayColorFn }: OrchardMapProps) {
     pumpX + gvPumpCols * colW + 40,
     imX + imCols * colW + 40
   )
-  const h = imY + 23 * colW + 50
+  const h = imY + 24 * colW + 50
 
   const renderBlock = (block: QuarterBlock | undefined, x: number, y: number) => {
     if (!block) return null
@@ -276,7 +276,7 @@ export function OrchardMap({ positions, overlayColorFn }: OrchardMapProps) {
             className="absolute rounded-lg"
             style={{
               left: imX - 8, top: imY - 8,
-              width: imCols * colW + 14, height: 23 * colW + 30,
+              width: imCols * colW + 14, height: 24 * colW + 30,
               background: '#f0fdf4', border: '1px solid #22c55e25',
             }}
           />

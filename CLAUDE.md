@@ -161,11 +161,11 @@ Alla positioner ska skapas som seed data vid första deploy. Strukturen:
 - Totalt: 95 positioner
 
 ### Ingrid Marie (quarterId: "ingrid-marie")
-- 12 rader × 23 positioner + 3 rader × 20 positioner (I1–I15)
+- 5 rader × 24 positioner (I1–I5) + 7 rader × 23 positioner (I6–I12) + 3 rader × 20 positioner (I13–I15)
 - ID-format: `im-{rad}-{position}` (1-indexerat)
-- Totalt: 336 positioner
+- Totalt: 341 positioner
 
-**Totalt: 705 positioner**
+**Totalt: 710 positioner**
 
 ### Landmärken
 
@@ -719,7 +719,8 @@ const QUARTERS = {
   },
   "ingrid-marie": {
     rows: [
-      ...Array.from({ length: 12 }, (_, i) => ({ label: `I${i + 1}`, count: 23 })),
+      ...Array.from({ length: 5 }, (_, i) => ({ label: `I${i + 1}`, count: 24 })),
+      ...Array.from({ length: 7 }, (_, i) => ({ label: `I${i + 6}`, count: 23 })),
       ...Array.from({ length: 3 }, (_, i) => ({ label: `I${i + 13}`, count: 20 })),
     ],
     idPrefix: "im",

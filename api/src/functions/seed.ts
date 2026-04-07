@@ -77,9 +77,9 @@ function generatePositions(): PositionDoc[] {
     }
   }
 
-  // Ingrid Marie — 12×23 + 3×20
+  // Ingrid Marie — 5×24 + 7×23 + 3×20
   for (let r = 1; r <= 15; r++) {
-    const count = r <= 12 ? 23 : 20
+    const count = r <= 5 ? 24 : r <= 12 ? 23 : 20
     for (let p = 1; p <= count; p++) {
       positions.push({
         ...base,
@@ -140,3 +140,4 @@ app.http('seed', {
     }
   },
 })
+
