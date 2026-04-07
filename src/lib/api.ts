@@ -55,17 +55,35 @@ export const api = {
     return `${base}/export/work-sessions?from=${from}&to=${to}&format=csv`
   },
 
-  createEvent: (data: import('./types').CreateEventPayload) =>
-    request<import('./types').Event>('/events', {
+  createEvent: async (data: import('./types').CreateEventPayload) => {
+    const token = localStorage.getItem('auth_token')
+    const res = await fetch(`${BASE}/events`, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify(data),
-    }),
+    })
+    if (res.status === 409) return null // duplicate, treat as success
+    if (!res.ok) { const body = await res.text().catch(() => ''); throw new Error(`${res.status}: ${body}`) }
+    return res.json() as Promise<import('./types').Event>
+  },
 
-  createBatchEvents: (data: import('./types').BatchEventPayload) =>
-    request<import('./types').BatchEventResponse>('/events/batch', {
+  createBatchEvents: async (data: import('./types').BatchEventPayload) => {
+    const token = localStorage.getItem('auth_token')
+    const res = await fetch(`${BASE}/events/batch`, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify(data),
-    }),
+    })
+    if (res.status === 409) return { created: 0 } as import('./types').BatchEventResponse
+    if (!res.ok) { const body = await res.text().catch(() => ''); throw new Error(`${res.status}: ${body}`) }
+    return res.json() as Promise<import('./types').BatchEventResponse>
+  },
 
   seed: () => request<{ created: number }>('/seed', { method: 'POST' }),
 }

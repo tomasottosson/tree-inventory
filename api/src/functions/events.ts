@@ -58,6 +58,24 @@ app.http('createEvent', {
     }
 
     const container = getContainer('events')
+
+    // Reject duplicate: same position + type + date + user within 5 minutes
+    const fiveMinAgo = new Date(Date.now() - 5 * 60_000).toISOString()
+    const { resources: dupes } = await container.items.query({
+      query: 'SELECT c.id FROM c WHERE c.positionId = @positionId AND c.type = @type AND c.date = @date AND c.createdBy = @createdBy AND c.createdAt > @since',
+      parameters: [
+        { name: '@positionId', value: String(body.positionId) },
+        { name: '@type', value: String(body.type) },
+        { name: '@date', value: String(body.date) },
+        { name: '@createdBy', value: String(body.createdBy || 'unknown') },
+        { name: '@since', value: fiveMinAgo },
+      ],
+    }).fetchAll()
+
+    if (dupes.length > 0) {
+      return { status: 409, jsonBody: { error: 'Duplicate event detected' } }
+    }
+
     const event: Record<string, unknown> = {
       id: `evt-${crypto.randomUUID()}`,
       positionId: body.positionId,
@@ -97,23 +115,38 @@ app.http('createBatchEvents', {
 
     const container = getContainer('events')
     const createdAt = new Date().toISOString()
+    const fiveMinAgo = new Date(Date.now() - 5 * 60_000).toISOString()
 
-    const results = await Promise.all(
-      positions.map((positionId) =>
-        container.items.create({
-          id: `evt-${crypto.randomUUID()}`,
-          positionId,
-          quarterId: body.quarterId,
-          type: body.type,
-          date: body.date,
-          details: body.details || {},
-          notes: body.notes || '',
-          createdBy: body.createdBy || 'unknown',
-          createdAt,
-        })
-      )
-    )
+    let created = 0
+    for (const positionId of positions) {
+      // Skip if duplicate exists within last 5 minutes
+      const { resources: dupes } = await container.items.query({
+        query: 'SELECT c.id FROM c WHERE c.positionId = @positionId AND c.type = @type AND c.date = @date AND c.createdBy = @createdBy AND c.createdAt > @since',
+        parameters: [
+          { name: '@positionId', value: positionId },
+          { name: '@type', value: String(body.type) },
+          { name: '@date', value: String(body.date) },
+          { name: '@createdBy', value: String(body.createdBy || 'unknown') },
+          { name: '@since', value: fiveMinAgo },
+        ],
+      }).fetchAll()
 
-    return { status: 201, jsonBody: { created: results.length } }
+      if (dupes.length > 0) continue
+
+      await container.items.create({
+        id: `evt-${crypto.randomUUID()}`,
+        positionId,
+        quarterId: body.quarterId,
+        type: body.type,
+        date: body.date,
+        details: body.details || {},
+        notes: body.notes || '',
+        createdBy: body.createdBy || 'unknown',
+        createdAt,
+      })
+      created++
+    }
+
+    return { status: 201, jsonBody: { created } }
   },
 })
