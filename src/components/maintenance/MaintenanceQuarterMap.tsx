@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, useMemo } from 'react'
 import type { Position } from '../../lib/types'
 import { PositionDot } from '../map/PositionDot'
-import type { OverlayColor } from '../map/PositionDot'
 import type { OverlayMode } from '../../lib/eventOverlay'
+import { isActionableTree, getOverlayColor } from '../../lib/eventOverlay'
 
 interface RowData {
   label: string
@@ -40,22 +40,6 @@ function groupIntoRows(positions: Position[]): RowData[] {
   return rows
 }
 
-function isSelectable(p: Position) {
-  return p.type === 'tree' && (p.condition === 'healthy' || p.condition === 'weak')
-}
-
-const OVERLAY_DONE: OverlayColor = { bg: '#22c55e', border: '#15803d' }
-const OVERLAY_MISSING: OverlayColor = { bg: '#fca5a5', border: '#dc2626' }
-
-function getOverlayColor(
-  position: Position,
-  overlayMode: OverlayMode,
-  eventSet: Set<string>
-): OverlayColor | null {
-  if (overlayMode === 'condition') return null
-  if (!isSelectable(position)) return null
-  return eventSet.has(position.id) ? OVERLAY_DONE : OVERLAY_MISSING
-}
 
 export function MaintenanceQuarterMap({
   positions,
@@ -88,20 +72,20 @@ export function MaintenanceQuarterMap({
     return { mainRows: groupIntoRows(positions), pumpRows: [] }
   }, [positions, quarterId])
 
-  const treesTotal = positions.filter(isSelectable).length
-  const treesSelected = positions.filter((p) => isSelectable(p) && selected.has(p.id)).length
+  const treesTotal = positions.filter(isActionableTree).length
+  const treesSelected = positions.filter((p) => isActionableTree(p) && selected.has(p.id)).length
   const allSelected = treesTotal > 0 && treesSelected === treesTotal
 
   function toggleAll() {
     if (allSelected) {
       onChange(new Set())
     } else {
-      onChange(new Set(positions.filter(isSelectable).map((p) => p.id)))
+      onChange(new Set(positions.filter(isActionableTree).map((p) => p.id)))
     }
   }
 
   function toggleRow(row: RowData) {
-    const treeIds = row.positions.filter(isSelectable).map((p) => p.id)
+    const treeIds = row.positions.filter(isActionableTree).map((p) => p.id)
     const allRowSelected = treeIds.every((id) => selected.has(id))
     const next = new Set(selected)
     if (allRowSelected) {
@@ -127,7 +111,7 @@ export function MaintenanceQuarterMap({
       if (!id) return // no dot under finger → allow normal scroll
 
       const pos = positions.find((p) => p.id === id)
-      if (!pos || !isSelectable(pos)) return
+      if (!pos || !isActionableTree(pos)) return
 
       e.preventDefault()
       isDragging.current = true
@@ -149,7 +133,7 @@ export function MaintenanceQuarterMap({
       const id = getPositionId(touch.clientX, touch.clientY)
       if (!id) return
       const pos = positions.find((p) => p.id === id)
-      if (!pos || !isSelectable(pos)) return
+      if (!pos || !isActionableTree(pos)) return
 
       const next = new Set(selectionRef.current)
       if (dragMode.current === 'add') {
@@ -181,7 +165,7 @@ export function MaintenanceQuarterMap({
     const id = (e.target as HTMLElement).closest<HTMLElement>('[data-position-id]')?.dataset.positionId
     if (!id) return
     const pos = positions.find((p) => p.id === id)
-    if (!pos || !isSelectable(pos)) return
+    if (!pos || !isActionableTree(pos)) return
     isDragging.current = true
     const next = new Set(selectionRef.current)
     if (next.has(id)) { next.delete(id); dragMode.current = 'remove' }
@@ -194,7 +178,7 @@ export function MaintenanceQuarterMap({
     const id = (e.target as HTMLElement).closest<HTMLElement>('[data-position-id]')?.dataset.positionId
     if (!id) return
     const pos = positions.find((p) => p.id === id)
-    if (!pos || !isSelectable(pos)) return
+    if (!pos || !isActionableTree(pos)) return
     const next = new Set(selectionRef.current)
     if (dragMode.current === 'add') { if (next.has(id)) return; next.add(id) }
     else { if (!next.has(id)) return; next.delete(id) }
@@ -204,7 +188,7 @@ export function MaintenanceQuarterMap({
   function handleMouseUp() { isDragging.current = false }
 
   function renderColumn(row: RowData) {
-    const treeIds = row.positions.filter(isSelectable).map((p) => p.id)
+    const treeIds = row.positions.filter(isActionableTree).map((p) => p.id)
     const rowAllSelected = treeIds.length > 0 && treeIds.every((id) => selected.has(id))
     return (
       <div key={row.label} className="flex flex-col items-center" style={{ gap: g }}>
@@ -265,7 +249,7 @@ export function MaintenanceQuarterMap({
     if (!isOverlay) return []
     const allRows = [...mainRows, ...pumpRows]
     return allRows.map((r) => {
-      const trees = r.positions.filter(isSelectable)
+      const trees = r.positions.filter(isActionableTree)
       const done = trees.filter((p) => effectiveEventSet.has(p.id)).length
       return {
         label: r.label,

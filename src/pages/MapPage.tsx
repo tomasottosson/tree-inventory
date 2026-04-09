@@ -2,22 +2,19 @@ import { useMemo, useState } from 'react'
 import { usePositions } from '../hooks/usePositions'
 import { useAllEventOverlay } from '../hooks/useEvents'
 import { OrchardMap } from '../components/map/OrchardMap'
-import type { OverlayColor } from '../components/map/PositionDot'
 import {
   buildEventSet,
+  getOverlayColor,
+  isActionableTree,
   OVERLAY_LABELS,
   SEASON_LABELS,
   OVERLAY_DONE_LABELS,
 } from '../lib/eventOverlay'
 import type { OverlayMode, SeasonFilter } from '../lib/eventOverlay'
 import { QUARTERS } from '../lib/constants'
-import type { Position } from '../lib/types'
 
 const OVERLAY_MODES: OverlayMode[] = ['condition', 'pruning', 'fertilization']
 const SEASON_FILTERS: SeasonFilter[] = ['current', 'previous', 'all']
-
-const OVERLAY_DONE: OverlayColor = { bg: '#22c55e', border: '#15803d' }
-const OVERLAY_MISSING: OverlayColor = { bg: '#fca5a5', border: '#dc2626' }
 
 export function MapPage() {
   const { data: positions, isLoading, error } = usePositions()
@@ -36,17 +33,13 @@ export function MapPage() {
 
   const overlayColorFn = useMemo(() => {
     if (!isOverlay) return undefined
-    return (p: Position): OverlayColor | null => {
-      if (p.type !== 'tree') return null
-      if (p.condition === 'dead') return null
-      return eventSet.has(p.id) ? OVERLAY_DONE : OVERLAY_MISSING
-    }
-  }, [isOverlay, eventSet])
+    return (p: Position) => getOverlayColor(p, overlayMode, eventSet)
+  }, [isOverlay, overlayMode, eventSet])
 
   const quarterStats = useMemo(() => {
     if (!isOverlay || !positions) return []
     return QUARTERS.map((q) => {
-      const trees = positions.filter((p) => p.quarterId === q.id && p.type === 'tree' && p.condition !== 'dead')
+      const trees = positions.filter((p) => p.quarterId === q.id && isActionableTree(p))
       const done = trees.filter((p) => eventSet.has(p.id)).length
       const total = trees.length
       const pct = total > 0 ? Math.round((done / total) * 100) : 0
