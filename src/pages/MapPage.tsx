@@ -12,6 +12,7 @@ import {
 } from '../lib/eventOverlay'
 import type { OverlayMode, SeasonFilter } from '../lib/eventOverlay'
 import { QUARTERS } from '../lib/constants'
+import type { Position } from '../lib/types'
 
 const OVERLAY_MODES: OverlayMode[] = ['condition', 'pruning', 'fertilization']
 const SEASON_FILTERS: SeasonFilter[] = ['current', 'previous', 'all']
@@ -33,7 +34,7 @@ export function MapPage() {
 
   const overlayColorFn = useMemo(() => {
     if (!isOverlay) return undefined
-    return (p) => getOverlayColor(p, overlayMode, eventSet)
+    return (p: Position) => getOverlayColor(p, overlayMode, eventSet)
   }, [isOverlay, overlayMode, eventSet])
 
   const quarterStats = useMemo(() => {
