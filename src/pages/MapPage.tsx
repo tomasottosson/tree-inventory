@@ -33,7 +33,7 @@ export function MapPage() {
 
   const overlayColorFn = useMemo(() => {
     if (!isOverlay) return undefined
-    return (p: Position) => getOverlayColor(p, overlayMode, eventSet)
+    return (p) => getOverlayColor(p, overlayMode, eventSet)
   }, [isOverlay, overlayMode, eventSet])
 
   const quarterStats = useMemo(() => {
