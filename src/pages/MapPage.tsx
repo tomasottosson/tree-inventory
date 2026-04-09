@@ -38,6 +38,7 @@ export function MapPage() {
     if (!isOverlay) return undefined
     return (p: Position): OverlayColor | null => {
       if (p.type !== 'tree') return null
+      if (p.condition === 'dead') return null
       return eventSet.has(p.id) ? OVERLAY_DONE : OVERLAY_MISSING
     }
   }, [isOverlay, eventSet])
@@ -45,7 +46,7 @@ export function MapPage() {
   const quarterStats = useMemo(() => {
     if (!isOverlay || !positions) return []
     return QUARTERS.map((q) => {
-      const trees = positions.filter((p) => p.quarterId === q.id && p.type === 'tree')
+      const trees = positions.filter((p) => p.quarterId === q.id && p.type === 'tree' && p.condition !== 'dead')
       const done = trees.filter((p) => eventSet.has(p.id)).length
       const total = trees.length
       const pct = total > 0 ? Math.round((done / total) * 100) : 0
