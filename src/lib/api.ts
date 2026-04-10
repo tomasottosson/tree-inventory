@@ -70,6 +70,18 @@ export const api = {
     return res.json() as Promise<import('./types').Event>
   },
 
+  deleteEvent: async (id: string, positionId: string): Promise<void> => {
+    const token = localStorage.getItem('auth_token')
+    const res = await fetch(`${BASE}/events/${id}?positionId=${encodeURIComponent(positionId)}`, {
+      method: 'DELETE',
+      headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    })
+    if (!res.ok) {
+      const body = await res.text().catch(() => '')
+      throw new Error(`${res.status}: ${body}`)
+    }
+  },
+
   createBatchEvents: async (data: import('./types').BatchEventPayload) => {
     const token = localStorage.getItem('auth_token')
     const res = await fetch(`${BASE}/events/batch`, {

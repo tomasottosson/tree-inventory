@@ -60,3 +60,15 @@ export function useCreateBatchEvents() {
     },
   })
 }
+
+export function useDeleteEvent() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, positionId }: { id: string; positionId: string }) =>
+      api.deleteEvent(id, positionId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['events'] })
+      qc.invalidateQueries({ queryKey: ['stats'] })
+    },
+  })
+}

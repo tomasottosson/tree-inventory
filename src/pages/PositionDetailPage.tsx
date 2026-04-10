@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { usePosition, useUpdatePosition } from '../hooks/usePositions'
-import { useEvents, useCreateEvent } from '../hooks/useEvents'
+import { useEvents, useCreateEvent, useDeleteEvent } from '../hooks/useEvents'
 import { PositionCard } from '../components/inventory/PositionCard'
 import { EventList } from '../components/events/EventList'
 import { EventForm, type EventFormData } from '../components/events/EventForm'
@@ -15,6 +15,7 @@ export function PositionDetailPage() {
   const update = useUpdatePosition()
   const { data: events, isLoading: eventsLoading } = useEvents({ positionId: id! })
   const createEvent = useCreateEvent()
+  const deleteEvent = useDeleteEvent()
   const [showEventForm, setShowEventForm] = useState(false)
 
   if (isLoading) {
@@ -120,7 +121,11 @@ export function PositionDetailPage() {
         {eventsLoading ? (
           <p className="text-sm text-stone-400 text-center py-2">Laddar händelser...</p>
         ) : (
-          <EventList events={events ?? []} />
+          <EventList
+            events={events ?? []}
+            onDelete={(e) => deleteEvent.mutate({ id: e.id, positionId: e.positionId })}
+            deletingId={deleteEvent.isPending ? deleteEvent.variables?.id ?? null : null}
+          />
         )}
       </div>
     </div>

@@ -150,3 +150,34 @@ app.http('createBatchEvents', {
     return { status: 201, jsonBody: { created } }
   },
 })
+
+app.http('deleteEvent', {
+  methods: ['DELETE'],
+  route: 'events/{id}',
+  handler: async (req: HttpRequest): Promise<HttpResponseInit> => {
+    const id = req.params.id
+    const positionId = req.query.get('positionId')
+
+    if (!id || !positionId) {
+      return { status: 400, jsonBody: { error: 'id and positionId are required' } }
+    }
+
+    const container = getContainer('events')
+
+    try {
+      const { resource } = await container.item(id, positionId).read()
+      if (!resource) {
+        return { status: 404, jsonBody: { error: 'Event not found' } }
+      }
+      if (resource.type === 'work_session') {
+        return { status: 403, jsonBody: { error: 'work_session events cannot be deleted' } }
+      }
+      await container.item(id, positionId).delete()
+      return { status: 204 }
+    } catch (err: unknown) {
+      const code = (err as { code?: number }).code
+      if (code === 404) return { status: 404, jsonBody: { error: 'Event not found' } }
+      throw err
+    }
+  },
+})
