@@ -1,5 +1,5 @@
 param location string = 'westeurope'
-param appName string = 'appelodlingen'
+param appName string = 'swa-appelodlingen-prod'
 param cosmosEndpoint string
 
 @secure()
