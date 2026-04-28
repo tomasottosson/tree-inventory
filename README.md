@@ -85,16 +85,15 @@ All Azure-infrastruktur definieras med Bicep i `infra/`. Resurser:
 az login
 
 # Skapa resursgrupp (en gång)
-az group create --name tree-inventory --location westeurope
+az group create --name rg-tree-inventory --location westeurope
 
 # Deploya infrastruktur
 az deployment group create \
-  --resource-group tree-inventory \
-  --template-file infra/main.bicep \
-  --parameters infra/main.bicepparam
+  --resource-group rg-tree-inventory \
+  --template-file infra/main.bicep
 ```
 
-Outputsen visar Cosmos-endpoint och SWA-URL. Använd Cosmos-värdena i `api/local.settings.json` för lokal utveckling, eller kör `az cosmosdb keys list` för att hämta nyckel.
+Outputsen visar Cosmos-endpoint och SWA-URL. Hämta Cosmos-nyckel för lokal utveckling med `az cosmosdb keys list -n cosmos-appelodlingen -g rg-tree-inventory`.
 
 ## Projektstruktur
 
@@ -112,8 +111,7 @@ Outputsen visar Cosmos-endpoint och SWA-URL. Använd Cosmos-värdena i `api/loca
 │       ├── functions/    # HTTP-funktioner
 │       └── lib/          # Cosmos DB-klient, auth-hjälpare
 ├── infra/                # Bicep IaC
-│   ├── main.bicep        # Alla Azure-resurser
-│   └── main.bicepparam   # Parametrar (region, miljö)
+│   └── main.bicep        # Alla Azure-resurser (SWA + Cosmos)
 ├── CLAUDE.md             # AI-instruktioner och specifikation
 └── package.json
 ```
