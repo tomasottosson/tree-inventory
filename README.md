@@ -43,7 +43,11 @@ API:t körs på `http://localhost:7071`.
 
 ### 4. Seed:a databasen
 
-Kör en gång för att skapa alla 700 positioner och 3 användare:
+> ⚠️ **VARNING: Kör ENDAST mot en tom databas.** `/api/seed` gör `upsert` på varje position och användare — dvs den skriver över *hela* dokumentet med tomma default-värden (`condition: "unknown"`, `species: null`, `notes: ""`, `inventoriedAt: null`, PIN återställs till `1234` osv). Om databasen redan innehåller fältinventering raderas den datan permanent, utan bekräftelse. Detta är **inte** en no-op om datan redan finns.
+>
+> Kör bara detta steg vid allra första uppsättningen av en ny Cosmos-databas. Utvecklar du mot den befintliga produktionsdatabasen (t.ex. via `az cosmosdb keys list`, se [Provisionera](#provisionera)) — **hoppa över det här steget helt**.
+
+Kör en gång, mot en helt tom databas, för att skapa alla 700 positioner och 3 användare:
 
 ```bash
 curl -X POST http://localhost:7071/api/seed
@@ -125,7 +129,7 @@ Outputsen visar Cosmos-endpoint och SWA-URL. Hämta Cosmos-nyckel för lokal utv
 | GET | `/api/positions/:id` | Hämta en position |
 | PATCH | `/api/positions/:id` | Uppdatera position |
 | GET | `/api/stats` | Aggregerad statistik |
-| POST | `/api/seed` | Skapa seed-data (700 positioner + 3 användare) |
+| POST | `/api/seed` | ⚠️ Skapa seed-data (700 positioner + 3 användare) — skriver över all befintlig data, kör endast mot tom databas |
 
 ## Tech stack
 
